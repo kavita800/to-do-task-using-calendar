@@ -24,13 +24,13 @@ export class IndexComponent implements OnInit {
   note: any;
   form: FormGroup;
   notes : any = [];
-  selectedDate : any;
+  selectedDate : any = [];
   config: IDatePickerConfig = {
     format: 'MM/DD/YYYY',
     firstDayOfWeek: 'su',
     monthFormat: 'MMM, YYYY',
     disableKeypress: false,
-    allowMultiSelect: false,
+    allowMultiSelect: true,
     closeOnSelect: undefined,
     closeOnSelectDelay: 100,
     openOnFocus: true,
@@ -63,7 +63,8 @@ export class IndexComponent implements OnInit {
     unSelectOnClick: true,
     hideOnOutsideClick: true
   };
-  showDateOnly: any;
+  showDateOnly: any = [];
+  array: boolean = false;
 
   constructor(public calendarService: CalendarService, private modalService: NgbModal) { 
       this.form = new FormGroup({
@@ -72,13 +73,35 @@ export class IndexComponent implements OnInit {
       });
     }
 
-    public onSelect (){
-     let dateOnly = new Date(this.selectedDate);
-     this.showDateOnly = dateOnly.getDate();
+    public onSelect (selectedDate){
+      this.array = false;
+      let dateOnly;
+        dateOnly = new Date(selectedDate);
+        let dateOnlydata = dateOnly.toLocaleDateString();
+        this.showDateOnly.push(dateOnly.getDate());
+        this.selectedDate.push(dateOnlydata);
+      if(this.showDateOnly.length >= 1)
+        this.array = true;
+      else{
+        this.array = false;
+      }
     }
 
   ngOnInit(): void {
     this.notes = this.calendarService.getAll();
+  }
+
+  // Close Task
+  public closeTask(index){
+    this.notes.map((data, i) => {
+      if(i == index && !data.close)
+        data['close'] = true;
+      else if(i == index && data.close)
+        data['close'] = !data.close;
+    })
+    console.log('index==', index, this.notes);
+    
+
   }
 
   // Compact form controls use
@@ -86,12 +109,31 @@ export class IndexComponent implements OnInit {
     return this.form.controls;
   }
 
+  //Date maker for Agenda
+  private dayFetch(array){
+    this.showDateOnly = [];
+    let onlyDate;
+    if(typeof array === 'object'){
+      this.array = true;
+      array.map(data =>{
+        onlyDate = new Date(data);
+        onlyDate = onlyDate.getDate();
+        this.showDateOnly.push(onlyDate);
+      })
+    }else{
+      this.array =false;
+      onlyDate = new Date(array);
+      this.showDateOnly = onlyDate.getDate();
+    }
+  }
+
   // edit Task
-  public editTask(id){
+  public async editTask(id){
     this.id = id;
     this.note = this.calendarService.find(id);
     this.selectedDate = this.note.createdDate;
-    this.onSelect();
+    await this.dayFetch(this.selectedDate);
+    // this.onSelect(this.selectedDate);
         this.form.setValue({title: this.note.title, note: this.note.note});
   }
 
@@ -102,6 +144,8 @@ export class IndexComponent implements OnInit {
       return;
     }
     this.form.value.createdDate = this.selectedDate;
+    console.log('form value==', this.form.value);
+    
     if(this.id){
       // In case of edit
       this.notes = this.calendarService.update(this.id, this.form.value);
@@ -115,7 +159,7 @@ export class IndexComponent implements OnInit {
       if(this.notes)
         this.form.reset();
     }
-    this.selectedDate = '';
-    this.showDateOnly = ''
+    this.selectedDate = [];
+    this.showDateOnly = [];
   }
 }

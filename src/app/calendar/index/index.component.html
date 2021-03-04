@@ -1,21 +1,24 @@
 <div class="container">
     <h1>Angular Calendar</h1>
   
-    <dp-day-calendar theme='dp-material' [(ngModel)]="selectedDate" (onSelect)="onSelect()" [config]="config"></dp-day-calendar>  
-    
-    <h3>Agenda on {{showDateOnly}}</h3>
+    <dp-day-calendar theme='dp-material' (onSelect)="onSelect($event.date._d)" [config]="config"></dp-day-calendar>
+    <h3 *ngIf="!array">Agenda on {{showDateOnly}}</h3>
+    <div *ngIf="array"><h3>Agenda on</h3> <h6 *ngFor="let date of showDateOnly;" class="col-lg-2">{{date}}</h6></div>
     
     <table class="table table-bordered">
       <tr>
+        <th></th>
         <th>Title</th>
         <th>Note</th>
         <th width="220px">Action</th>
       </tr>
       <tr *ngFor="let note of notes; index as i">
+        <td><input type="checkbox" (click)="closeTask(i)"></td>
         <td>{{ note.title }}</td>
         <td>{{ note.note }}</td>
         <td>
-          <button  class="btn btn-primary" (click)="editTask(i)">Edit</button>
+          <button *ngIf='!note.close' class="btn btn-primary" (click)="editTask(i)">Edit</button>
+          <button *ngIf='note.close' class="btn btn-danger">x</button>
         </td>
       </tr>
     </table> 
